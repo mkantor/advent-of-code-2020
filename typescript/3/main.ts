@@ -1,9 +1,10 @@
-type Trees = readonly (readonly boolean[])[]
+type Trees = boolean[][]
 type Trajectory = {
     right: number
     down: number
 }
 
+// Unchecked invariant: all rows of trees must have the same width.
 function countTreesEncountered(trajectory: Trajectory, trees: Trees): number {
     const rowWidth = trees[0].length
     let treesEncountered = 0
@@ -351,7 +352,7 @@ const trees = [
     [t, t, t, t, _, t, t, t, _, t, _, _, _, _, _, t, _, _, _, _, t, _, _, t, _, t, _, _, _, _, t],
     [_, _, t, _, _, _, t, _, _, _, t, _, t, _, _, _, _, _, _, _, t, _, _, _, _, t, _, _, _, t, _],
     [_, _, _, _, _, _, t, t, _, t, t, t, _, _, t, t, _, t, _, t, t, t, _, _, _, _, _, _, t, _, t],
-] as const
+]
 
 // Part 1:
 console.log(
