@@ -26,7 +26,6 @@ function countTreesEncountered(trajectory: Trajectory, trees: Trees): number {
 const _ = false
 const t = true
 
-const trajectory = { right: 3, down: 1 }
 // prettier-ignore
 const trees = [
     [_, _, _, _, _, _, _, t, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, t, _, _, _, _, _, _],
@@ -354,4 +353,18 @@ const trees = [
     [_, _, _, _, _, _, t, t, _, t, t, t, _, _, t, t, _, t, _, t, t, t, _, _, _, _, _, _, t, _, t],
 ] as const
 
-console.log('Trees encountered:', countTreesEncountered(trajectory, trees))
+// Part 1:
+console.log(
+    'Trees encountered:',
+    countTreesEncountered({ right: 3, down: 1 }, trees),
+)
+
+// Part 2:
+console.log(
+    'Trees encountered over many trajectories, multiplied:',
+    countTreesEncountered({ right: 1, down: 1 }, trees) *
+        countTreesEncountered({ right: 3, down: 1 }, trees) *
+        countTreesEncountered({ right: 5, down: 1 }, trees) *
+        countTreesEncountered({ right: 7, down: 1 }, trees) *
+        countTreesEncountered({ right: 1, down: 2 }, trees),
+)
