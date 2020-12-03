@@ -14,6 +14,25 @@ function findTwoExpensesWithSum(
     return undefined
 }
 
+function findThreeExpensesWithSum(
+    expenses: number[],
+    sum: number,
+): [number, number, number] | undefined {
+    // There's probably a more efficient way to do this...
+    for (let index = 0; index < expenses.length - 2; index++) {
+        const expense = expenses[index]
+        const sumOfTwo = sum - expense
+        const twoExpenses = findTwoExpensesWithSum(
+            expenses.slice(index + 1),
+            sumOfTwo,
+        )
+        if (twoExpenses !== undefined) {
+            return [expense, ...twoExpenses]
+        }
+    }
+    return undefined
+}
+
 const expenseReport = [
     1046,
     1565,
@@ -217,8 +236,17 @@ const expenseReport = [
     1535,
 ]
 
-const expenses = findTwoExpensesWithSum(expenseReport, 2020)
-if (expenses === undefined) {
+const twoExpenses = findTwoExpensesWithSum(expenseReport, 2020)
+if (twoExpenses === undefined) {
     throw new Error("Couldn't find two expenses which sum to 2020")
 }
-console.log('Multiplied expenses:', expenses[0] * expenses[1])
+console.log('Product of two expenses:', twoExpenses[0] * twoExpenses[1])
+
+const threeExpenses = findThreeExpensesWithSum(expenseReport, 2020)
+if (threeExpenses === undefined) {
+    throw new Error("Couldn't find three expenses which sum to 2020")
+}
+console.log(
+    'Product of three expenses:',
+    threeExpenses[0] * threeExpenses[1] * threeExpenses[2],
+)
