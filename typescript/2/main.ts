@@ -44,9 +44,12 @@ function isPasswordValid(policy: PasswordPolicy, password: Password): boolean {
     return policyLetterCount >= policy.min && policyLetterCount <= policy.max
 }
 
-function countValidPasswords(passwords: Passwords): number {
-    return passwords.reduce((count, [policy, password]) => {
-        return isPasswordValid(policy, password) ? count + 1 : count
+function countWithPredicate<T>(
+    inputs: T[],
+    predicate: (input: T) => boolean,
+): number {
+    return inputs.reduce((count, input) => {
+        return predicate(input) ? count + 1 : count
     }, 0)
 }
 
@@ -1053,4 +1056,7 @@ const passwords: Passwords = [
     [{ min: 9, max: 16, letter: 'd' }, 'dsdddddddrdddddhdbdd'],
 ]
 
-console.log('Number of valid passwords:', countValidPasswords(passwords))
+console.log(
+    'Number of valid passwords:',
+    countWithPredicate(passwords, (row) => isPasswordValid(...row)),
+)
