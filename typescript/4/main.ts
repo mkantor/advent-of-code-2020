@@ -1,72 +1,86 @@
-type PassportField =
-    | 'byr'
-    | 'iyr'
-    | 'eyr'
-    | 'hgt'
-    | 'hcl'
-    | 'ecl'
-    | 'pid'
-    | 'cid'
+// For this one I went back the following day to expand on some thoughts I had
+// during the initial implementation (leveraging type guards). This is total
+// overkill, especially since in the end I don't even use the type-level proofs
+// of ValidPassport-ness, but it was fun to play around with.
 
-type Passport = Partial<Record<PassportField, string>>
+type Branded<T, B> = T & { _brand: B }
 
-function isBirthYear(input?: string): boolean {
-    if (typeof input !== 'string') return false
-    if (input.length !== 4) return false
-    const number = parseInt(input, 10)
+type BirthYear = Branded<string, 'BirthYear'>
+function isBirthYear(value: unknown): value is BirthYear {
+    if (typeof value !== 'string') return false
+    if (value.length !== 4) return false
+    const number = parseInt(value, 10)
     return number >= 1920 && number <= 2002
 }
 
-function isIssueYear(input?: string): boolean {
-    if (typeof input !== 'string') return false
-    if (input.length !== 4) return false
-    const number = parseInt(input, 10)
+type IssueYear = Branded<string, 'IssueYear'>
+function isIssueYear(value: unknown): value is IssueYear {
+    if (typeof value !== 'string') return false
+    if (value.length !== 4) return false
+    const number = parseInt(value, 10)
     return number >= 2010 && number <= 2020
 }
 
-function isExpirationYear(input?: string): boolean {
-    if (typeof input !== 'string') return false
-    if (input.length !== 4) return false
-    const number = parseInt(input, 10)
+type ExpirationYear = Branded<string, 'ExpirationYear'>
+function isExpirationYear(value: unknown): value is ExpirationYear {
+    if (typeof value !== 'string') return false
+    if (value.length !== 4) return false
+    const number = parseInt(value, 10)
     return number >= 2020 && number <= 2030
 }
 
-function isHeight(input?: string): boolean {
-    if (typeof input !== 'string') return false
-    const number = parseInt(input, 10)
-    if (/^\d+cm$/.test(input)) {
+type Height = Branded<string, 'Height'>
+function isHeight(value: unknown): value is Height {
+    if (typeof value !== 'string') return false
+    const number = parseInt(value, 10)
+    if (/^\d+cm$/.test(value)) {
         return number >= 150 && number <= 193
-    } else if (/^\d+in$/.test(input)) {
+    } else if (/^\d+in$/.test(value)) {
         return number >= 59 && number <= 76
     } else {
         return false
     }
 }
 
-function isHairColor(input?: string): boolean {
-    if (typeof input !== 'string') return false
-    return /^#[0-9a-f]{6}$/.test(input)
+type HairColor = Branded<string, 'HairColor'>
+function isHairColor(value: unknown): value is HairColor {
+    if (typeof value !== 'string') return false
+    return /^#[0-9a-f]{6}$/.test(value)
 }
 
-function isEyeColor(input?: string): boolean {
-    if (typeof input !== 'string') return false
+type EyeColor = Branded<string, 'EyeColor'>
+function isEyeColor(value: unknown): value is EyeColor {
+    if (typeof value !== 'string') return false
     return (
-        input === 'amb' ||
-        input === 'blu' ||
-        input === 'brn' ||
-        input === 'gry' ||
-        input === 'grn' ||
-        input === 'hzl' ||
-        input === 'oth'
+        value === 'amb' ||
+        value === 'blu' ||
+        value === 'brn' ||
+        value === 'gry' ||
+        value === 'grn' ||
+        value === 'hzl' ||
+        value === 'oth'
     )
 }
 
-function isPassportId(input?: string): boolean {
-    if (typeof input !== 'string') return false
-    return /^\d{9}$/.test(input)
+type PassportId = Branded<string, 'PassportId'>
+function isPassportId(value: unknown): value is PassportId {
+    if (typeof value !== 'string') return false
+    return /^\d{9}$/.test(value)
 }
 
-function isPassportValid(passport: Passport): boolean {
+type ValidPassport = {
+    byr: BirthYear
+    iyr: IssueYear
+    eyr: ExpirationYear
+    hgt: Height
+    hcl: HairColor
+    ecl: EyeColor
+    pid: PassportId
+    cid?: string
+}
+function isValidPassport(
+    passport: Record<string, string | undefined>,
+): passport is ValidPassport {
     return (
         isBirthYear(passport.byr) &&
         isIssueYear(passport.iyr) &&
@@ -78,9 +92,11 @@ function isPassportValid(passport: Passport): boolean {
     )
 }
 
-function countValidPassports(passports: Passport[]): number {
+function countValidPassports(
+    passports: Record<string, string | undefined>[],
+): number {
     return passports.reduce((count, passport) => {
-        return isPassportValid(passport) ? count + 1 : count
+        return isValidPassport(passport) ? count + 1 : count
     }, 0)
 }
 
