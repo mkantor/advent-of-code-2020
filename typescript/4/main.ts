@@ -6,19 +6,75 @@ type PassportField =
     | 'hcl'
     | 'ecl'
     | 'pid'
-    | 'cid' // This field is truly optional!
+    | 'cid'
 
-type Passport = Partial<Record<PassportField, unknown>>
+type Passport = Partial<Record<PassportField, string>>
+
+function isBirthYear(input?: string): boolean {
+    if (typeof input !== 'string') return false
+    if (input.length !== 4) return false
+    const number = parseInt(input, 10)
+    return number >= 1920 && number <= 2002
+}
+
+function isIssueYear(input?: string): boolean {
+    if (typeof input !== 'string') return false
+    if (input.length !== 4) return false
+    const number = parseInt(input, 10)
+    return number >= 2010 && number <= 2020
+}
+
+function isExpirationYear(input?: string): boolean {
+    if (typeof input !== 'string') return false
+    if (input.length !== 4) return false
+    const number = parseInt(input, 10)
+    return number >= 2020 && number <= 2030
+}
+
+function isHeight(input?: string): boolean {
+    if (typeof input !== 'string') return false
+    const number = parseInt(input, 10)
+    if (/^\d+cm$/.test(input)) {
+        return number >= 150 && number <= 193
+    } else if (/^\d+in$/.test(input)) {
+        return number >= 59 && number <= 76
+    } else {
+        return false
+    }
+}
+
+function isHairColor(input?: string): boolean {
+    if (typeof input !== 'string') return false
+    return /^#[0-9a-f]{6}$/.test(input)
+}
+
+function isEyeColor(input?: string): boolean {
+    if (typeof input !== 'string') return false
+    return (
+        input === 'amb' ||
+        input === 'blu' ||
+        input === 'brn' ||
+        input === 'gry' ||
+        input === 'grn' ||
+        input === 'hzl' ||
+        input === 'oth'
+    )
+}
+
+function isPassportId(input?: string): boolean {
+    if (typeof input !== 'string') return false
+    return /^\d{9}$/.test(input)
+}
 
 function isPassportValid(passport: Passport): boolean {
     return (
-        'byr' in passport &&
-        'iyr' in passport &&
-        'eyr' in passport &&
-        'hgt' in passport &&
-        'hcl' in passport &&
-        'ecl' in passport &&
-        'pid' in passport
+        isBirthYear(passport.byr) &&
+        isIssueYear(passport.iyr) &&
+        isExpirationYear(passport.eyr) &&
+        isHeight(passport.hgt) &&
+        isHairColor(passport.hcl) &&
+        isEyeColor(passport.ecl) &&
+        isPassportId(passport.pid)
     )
 }
 
