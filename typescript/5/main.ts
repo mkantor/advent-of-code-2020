@@ -1028,10 +1028,9 @@ const orderedSeatIds = inputs
 
 console.log('Max seat ID:', orderedSeatIds[orderedSeatIds.length - 1])
 
-// FIXME: This is super wasteful.
-const seatWithMissingNeighbor = orderedSeatIds.find((value) => {
+const seatWithMissingNeighbor = orderedSeatIds.find((value, index) => {
     return (
-        !orderedSeatIds.includes(value + 1) &&
+        !(orderedSeatIds[index + 1] === value + 1) &&
         value !== orderedSeatIds[orderedSeatIds.length - 1]
     )
 })
