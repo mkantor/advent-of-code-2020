@@ -3,6 +3,10 @@ type SeatLocation = {
     column: number
 }
 
+// Much later I realized this could have simply converted the input directly
+// into two binary numbers (mapping F/L to zero and B/R to one) without doing
+// any math. Unfortunately I wasn't clever enough to notice that in the heat of
+// the moment.
 function findSeat(bspAddress: string): SeatLocation {
     const rowAddress = bspAddress.slice(0, 7)
     const columnAddress = bspAddress.slice(7)
