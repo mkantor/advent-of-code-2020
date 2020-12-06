@@ -13,3 +13,5 @@ I'm allowing myself to do some basic manual pre-processing of inputs instead of
 writing parsers for each of the raw text formats given by the website. I like
 writing parsers, but in this case I think it's a distraction from the main
 point of each problem.
+
+I'm *not* allowing any dependencies, only use of the standard library.
