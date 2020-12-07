@@ -3,42 +3,33 @@ type Rules = {
     [containerBag: string]: [number, string][]
 }
 
-function singularize(phrase: string): string {
-    if (phrase.endsWith('s')) {
-        return phrase.slice(0, -1)
-    } else {
-        return phrase
-    }
-}
-
-// This could probably be turned into one big regex.
 function parseRules(ruleDescriptions: string[]): Rules {
     const ruleEntries = ruleDescriptions.map((ruleDescription) => {
-        const [container, contentsDescription] = ruleDescription.split(
-            ' contain ',
+        const matches = ruleDescription.match(
+            /^(.+?)s contain (?:no other bags|(.+))\.$/,
         )
+        if (matches === null) {
+            throw new Error(`Invalid rule "${ruleDescription}"`)
+        }
+        const container = matches[1]
+        const contentsDescription = matches[2]
 
-        const individualContentsDescriptions = contentsDescription
-            .slice(0, -1) // Strip the ending period.
-            .split(', ')
-
-        const contents = individualContentsDescriptions
-            .map((contentDescription) => {
-                if (contentDescription === 'no other bags') {
-                    return undefined
-                } else {
-                    const matches = /^(\d+) (.*)$/.exec(contentDescription)
+        if (contentsDescription === undefined) {
+            return [container, []] as const
+        } else {
+            const contents = contentsDescription
+                .split(', ')
+                .map((contentDescription) => {
+                    const matches = contentDescription.match(/^(\d+) (.+?)s?$/)
                     if (matches === null) {
                         throw new Error(
                             `Invalid rule "${ruleDescription}" ("${contentDescription}" is malformed)`,
                         )
                     }
-                    return [matches[1], singularize(matches[2])]
-                }
-            })
-            .filter((content) => content !== undefined)
-
-        return [singularize(container), contents]
+                    return [parseInt(matches[1], 10), matches[2]] as const
+                })
+            return [container, contents] as const
+        }
     })
     return Object.fromEntries(ruleEntries)
 }
@@ -68,10 +59,13 @@ function findBagContents(
     targetBag: string,
     rules: Rules,
     multiplier: number = 1,
-): [number, string][] {
-    return rules[targetBag].flatMap<[number, string]>(([amount, bag]) => {
+): (readonly [number, string])[] {
+    return rules[targetBag].flatMap(([amount, bag]) => {
         const totalAmount = amount * multiplier
-        return [[totalAmount, bag], ...findBagContents(bag, rules, totalAmount)]
+        return [
+            [totalAmount, bag],
+            ...findBagContents(bag, rules, totalAmount),
+        ] as const
     })
 }
 
