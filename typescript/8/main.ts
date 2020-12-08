@@ -36,10 +36,7 @@ class VM {
 
 function detectLoopAndGetAccumulator(vm: VM): AccumulatorValue | undefined {
     while (vm.tick()) {
-        const recurringPointer = vm.instructionHistory.find(
-            (pointer) => pointer === vm.instructionPointer,
-        )
-        if (recurringPointer !== undefined) {
+        if (vm.instructionHistory.includes(vm.instructionPointer)) {
             // This instruction has been visited before, so we found a loop.
             return vm.accumulator
         }
@@ -48,12 +45,13 @@ function detectLoopAndGetAccumulator(vm: VM): AccumulatorValue | undefined {
 
 function fixAndGetFinalAccumulator(vm: VM): AccumulatorValue | undefined {
     if (detectLoopAndGetAccumulator(vm) === undefined) {
-        return undefined
+        // It didn't loop to begin with.
+        return vm.accumulator
     } else {
-        const historicalNopsAndJmps = vm.instructionHistory.reduce(
+        const encounteredNopsAndJmps = vm.instructionHistory.reduce(
             (nopsAndJmps, pointer) => {
                 const operation = vm.instructions[pointer][0]
-                if (operation === 'jmp' || operation === 'nop') {
+                if (operation === 'nop' || operation === 'jmp') {
                     return [...nopsAndJmps, pointer]
                 } else {
                     return nopsAndJmps
@@ -62,7 +60,7 @@ function fixAndGetFinalAccumulator(vm: VM): AccumulatorValue | undefined {
             [] as InstructionIndex[],
         )
 
-        for (const pointer of historicalNopsAndJmps) {
+        for (const pointer of encounteredNopsAndJmps) {
             const originalOperation = vm.instructions[pointer][0]
             const newOperation = originalOperation === 'nop' ? 'jmp' : 'nop'
 
@@ -74,6 +72,7 @@ function fixAndGetFinalAccumulator(vm: VM): AccumulatorValue | undefined {
 
             const adjustedVm = new VM(adjustedInstructions)
             if (detectLoopAndGetAccumulator(adjustedVm) === undefined) {
+                // No more loop!
                 return adjustedVm.accumulator
             }
         }
