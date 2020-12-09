@@ -32,23 +32,30 @@ function findSpanSummingToTarget(
     target: number,
     xmasNumbers: number[],
 ): number[] | undefined {
-    // These are inclusive.
-    let startIndex = 0
-    let endIndex = 1
+    if (xmasNumbers.length === 0) {
+        return target === 0 ? [] : undefined
+    } else if (xmasNumbers.length === 1) {
+        return target === xmasNumbers[0] ? xmasNumbers : undefined
+    } else {
+        // These are inclusive.
+        let startIndex = 0
+        let endIndex = 1
 
-    while (endIndex < xmasNumbers.length) {
-        const span = xmasNumbers.slice(startIndex, endIndex + 1)
-        const sum = span.reduce((a, b) => a + b)
-        if (sum === target) {
-            return span
-        } else if (sum > target) {
-            startIndex++
-        } else {
-            endIndex++
+        let sum = xmasNumbers[startIndex] + xmasNumbers[endIndex]
+        while (endIndex < xmasNumbers.length) {
+            if (sum === target) {
+                return xmasNumbers.slice(startIndex, endIndex + 1)
+            } else if (sum > target) {
+                sum -= xmasNumbers[startIndex]
+                startIndex++
+            } else {
+                endIndex++
+                sum += xmasNumbers[endIndex]
+            }
         }
-    }
 
-    return undefined
+        return undefined
+    }
 }
 
 const xmasNumbers = [
