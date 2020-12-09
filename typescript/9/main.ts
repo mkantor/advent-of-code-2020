@@ -1,6 +1,8 @@
 function isSumOfAnyTwo(target: number, addends: number[]): boolean {
-    for (const addend1 of addends) {
-        for (const addend2 of addends) {
+    for (let index1 = 0; index1 < addends.length - 1; index1++) {
+        for (let index2 = index1 + 1; index2 < addends.length; index2++) {
+            const addend1 = addends[index1]
+            const addend2 = addends[index2]
             if (addend1 + addend2 === target) {
                 return true
             }
