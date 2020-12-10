@@ -1,22 +1,18 @@
-type DifferenceCounts = { 1: number; 2: number; 3: number }
-function countDifferencesInChain(adapters: number[]): DifferenceCounts {
+function countDifferencesInChain(adapters: number[]): number[] {
     const ascendingAdapters = adapters.sort((a, b) => a - b)
     let previousJoltage = 0
-    const differences = { 1: 0, 2: 0, 3: 0 }
+    const counts = []
     for (const adapter of ascendingAdapters) {
         const difference = adapter - previousJoltage
-        if (difference === 1 || difference === 2 || difference === 3) {
-            differences[difference]++
+        if (counts[difference] === undefined) {
+            counts[difference] = 1
         } else {
-            throw new Error(
-                `Cannot complete chain: ${adapter} must be 1, 2, or 3 jolts` +
-                    ` greater than the previous adapter (${previousJoltage}).`,
-            )
+            counts[difference]++
         }
         previousJoltage = adapter
     }
-    differences[3]++ // One more for the device connection.
-    return differences
+    counts[3]++ // One more for the device connection at the end.
+    return counts
 }
 
 function getDeviceBuiltInAdapterJoltage(adapters: number[]): number {
