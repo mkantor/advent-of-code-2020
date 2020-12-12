@@ -2,16 +2,14 @@ type Action = 'N' | 'S' | 'E' | 'W' | 'L' | 'R' | 'F'
 type Instruction = [Action, number]
 
 type Point = [number, number]
-
-const north: Point = [0, -1]
-const south: Point = [0, 1]
-const east: Point = [1, 0]
-const west: Point = [-1, 0]
-
 type Position = {
-    bearing: Point
     coordinates: Point
     waypoint: Point
+}
+
+enum MovementMode {
+    ShipBased,
+    WaypointBased,
 }
 
 function iterate<T>(initial: T, times: number, fn: (x: T) => T): T {
@@ -36,126 +34,105 @@ function rotateLeftAroundOrigin(point: Point): Point {
     return [point[1], -point[0]]
 }
 
-function followShipInstruction(
-    initialPosition: Position,
-    instruction: Instruction,
-): Position {
-    const { bearing, coordinates } = initialPosition
-    const [action, value] = instruction
-    switch (action) {
-        case 'N':
-            return {
-                ...initialPosition,
-                coordinates: [coordinates[0], coordinates[1] - value],
-            }
-        case 'S':
-            return {
-                ...initialPosition,
-                coordinates: [coordinates[0], coordinates[1] + value],
-            }
-        case 'E':
-            return {
-                ...initialPosition,
-                coordinates: [coordinates[0] + value, coordinates[1]],
-            }
-        case 'W':
-            return {
-                ...initialPosition,
-                coordinates: [coordinates[0] - value, coordinates[1]],
-            }
-        case 'L':
-            const leftTurns = value / 90
-            if (!Number.isInteger(leftTurns)) {
-                throw new Error("Rotation wasn't an increment of 90 degrees")
-            }
-            return {
-                ...initialPosition,
-                bearing: iterate(bearing, leftTurns, rotateLeftAroundOrigin),
-            }
-        case 'R':
-            const rightTurns = value / 90
-            if (!Number.isInteger(rightTurns)) {
-                throw new Error("Rotation wasn't an increment of 90 degrees")
-            }
-            return {
-                ...initialPosition,
-                bearing: iterate(bearing, rightTurns, rotateRightAroundOrigin),
-            }
-        case 'F':
-            let action: Action
-            if (arraysAreEqual(bearing, north)) {
-                action = 'N'
-            } else if (arraysAreEqual(bearing, south)) {
-                action = 'S'
-            } else if (arraysAreEqual(bearing, east)) {
-                action = 'E'
-            } else if (arraysAreEqual(bearing, west)) {
-                action = 'W'
-            } else {
-                throw new Error(`Invalid bearing: ${bearing}`)
-            }
-            return followShipInstruction(initialPosition, [action, value])
-    }
-}
-
-function followWaypointInstruction(
-    initialPosition: Position,
-    instruction: Instruction,
-): Position {
-    const { coordinates, waypoint } = initialPosition
-    const [action, value] = instruction
-    switch (action) {
-        case 'N':
-            return {
-                ...initialPosition,
-                waypoint: [waypoint[0], waypoint[1] - value],
-            }
-        case 'S':
-            return {
-                ...initialPosition,
-                waypoint: [waypoint[0], waypoint[1] + value],
-            }
-        case 'E':
-            return {
-                ...initialPosition,
-                waypoint: [waypoint[0] + value, waypoint[1]],
-            }
-        case 'W':
-            return {
-                ...initialPosition,
-                waypoint: [waypoint[0] - value, waypoint[1]],
-            }
-        case 'L':
-            const leftTurns = value / 90
-            if (!Number.isInteger(leftTurns)) {
-                throw new Error("Rotation wasn't an increment of 90 degrees")
-            }
-            return {
-                ...initialPosition,
-                waypoint: iterate(waypoint, leftTurns, rotateLeftAroundOrigin),
-            }
-        case 'R':
-            const rightTurns = value / 90
-            if (!Number.isInteger(rightTurns)) {
-                throw new Error("Rotation wasn't an increment of 90 degrees")
-            }
-            return {
-                ...initialPosition,
-                waypoint: iterate(
-                    waypoint,
-                    rightTurns,
-                    rotateRightAroundOrigin,
-                ),
-            }
-        case 'F':
-            const movement = [waypoint[0] * value, waypoint[1] * value]
-            return {
-                ...initialPosition,
-                coordinates: [
-                    coordinates[0] + movement[0],
-                    coordinates[1] + movement[1],
-                ],
-            }
+function followInstruction(
+    mode: MovementMode,
+): (position: Position, instruction: Instruction) => Position {
+    return (position, instruction) => {
+        const [action, value] = instruction
+        const cardinalOperand =
+            mode === MovementMode.ShipBased ? 'coordinates' : 'waypoint'
+        switch (action) {
+            case 'N':
+                return {
+                    ...position,
+                    [cardinalOperand]: [
+                        position[cardinalOperand][0],
+                        position[cardinalOperand][1] - value,
+                    ],
+                }
+            case 'S':
+                return {
+                    ...position,
+                    [cardinalOperand]: [
+                        position[cardinalOperand][0],
+                        position[cardinalOperand][1] + value,
+                    ],
+                }
+            case 'E':
+                return {
+                    ...position,
+                    [cardinalOperand]: [
+                        position[cardinalOperand][0] + value,
+                        position[cardinalOperand][1],
+                    ],
+                }
+            case 'W':
+                return {
+                    ...position,
+                    [cardinalOperand]: [
+                        position[cardinalOperand][0] - value,
+                        position[cardinalOperand][1],
+                    ],
+                }
+            case 'L':
+                const leftTurns = value / 90
+                if (!Number.isInteger(leftTurns)) {
+                    throw new Error(
+                        "Rotation wasn't an increment of 90 degrees",
+                    )
+                }
+                return {
+                    ...position,
+                    waypoint: iterate(
+                        position.waypoint,
+                        leftTurns,
+                        rotateLeftAroundOrigin,
+                    ),
+                }
+            case 'R':
+                const rightTurns = value / 90
+                if (!Number.isInteger(rightTurns)) {
+                    throw new Error(
+                        "Rotation wasn't an increment of 90 degrees",
+                    )
+                }
+                return {
+                    ...position,
+                    waypoint: iterate(
+                        position.waypoint,
+                        rightTurns,
+                        rotateRightAroundOrigin,
+                    ),
+                }
+            case 'F':
+                let movementMultipliers
+                if (mode === MovementMode.WaypointBased) {
+                    movementMultipliers = position.waypoint
+                } else {
+                    const [absX, absY] = position.waypoint.map(Math.abs)
+                    let [x, y] = position.waypoint
+                    if (absX > absY) {
+                        y = 0
+                    } else if (absY > absX) {
+                        x = 0
+                    } else {
+                        throw new Error(
+                            `Waypoint ${position.waypoint} is exactly diagonal from the ship;` +
+                                ` this isn't valid with ship-based movement`,
+                        )
+                    }
+                    movementMultipliers = [x / absX, y / absY]
+                }
+                return {
+                    ...position,
+                    coordinates: [
+                        position.coordinates[0] +
+                            movementMultipliers[0] * value,
+                        position.coordinates[1] +
+                            movementMultipliers[1] * value,
+                    ],
+                }
+        }
     }
 }
 
@@ -167,7 +144,6 @@ function navigate(
     ) => Position,
 ): Position {
     const initialPosition: Position = {
-        bearing: east,
         coordinates: [0, 0],
         waypoint: [10, -1],
     }
@@ -974,13 +950,19 @@ const instructions: Instruction[] = [
     ['F', 4],
 ]
 
-const positionShipBased = navigate(instructions, followShipInstruction)
+const positionShipBased = navigate(
+    instructions,
+    followInstruction(MovementMode.ShipBased),
+)
 console.log(
     'Manhattan distance, ship-based:',
     manhattanDistance(positionShipBased.coordinates),
 )
 
-const positionWaypointBased = navigate(instructions, followWaypointInstruction)
+const positionWaypointBased = navigate(
+    instructions,
+    followInstruction(MovementMode.WaypointBased),
+)
 console.log(
     'Manhattan distance, waypoint-based:',
     manhattanDistance(positionWaypointBased.coordinates),
