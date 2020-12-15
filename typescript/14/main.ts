@@ -7,7 +7,7 @@ type Memory = Map<bigint, bigint>
 
 const max36BitInteger = 2n ** 36n - 1n
 
-function* powerSet<T>(values: T[], offset: number = 0): Generator<T[]> {
+function* powerSet<T>(values: T[], offset: number = 0): Generator<T[], void> {
     while (offset < values.length) {
         const first = values[offset++]
         for (const subset of powerSet(values, offset)) {
