@@ -10,7 +10,7 @@ const max36BitInteger = 2n ** 36n - 1n
 function* powerSet<T>(values: T[], offset: number = 0): Generator<T[]> {
     while (offset < values.length) {
         const first = values[offset++]
-        for (let subset of powerSet(values, offset)) {
+        for (const subset of powerSet(values, offset)) {
             subset.push(first)
             yield subset
         }
@@ -26,12 +26,12 @@ function parseMask(
         `0b${mask.replace(/1/g, 'X').replace(/0/g, '1').replace(/X/g, '0')}`,
     )
     const xMask = BigInt(`0b${mask.replace(/1/g, '0').replace(/X/g, '1')}`)
-    return { zeroMask, oneMask, xMask }
+    return { oneMask, zeroMask, xMask }
 }
 
 function sumMemoryValues(memory: Memory): bigint {
     let sum = 0n
-    for (let value of memory.values()) {
+    for (const value of memory.values()) {
         sum += value
     }
     return sum
@@ -78,21 +78,20 @@ function emulateV2(program: InputProgram): Memory {
                         [],
                     )
 
-                for (let xPlacesSubset of powerSet(xPlaces)) {
+                for (const xPlacesSubset of powerSet(xPlaces)) {
                     const xPlacesSubsetAsSet = new Set(xPlacesSubset)
-                    let onePositions = xPlacesSubset
-                    let zeroPositions = xPlaces.filter(
+                    const onePositions = xPlacesSubset
+                    const zeroPositions = xPlaces.filter(
                         (index) => !xPlacesSubsetAsSet.has(index),
                     )
 
                     let floatingOneMask = 0n
-                    for (let onePosition of onePositions) {
-                        floatingOneMask = floatingOneMask ^ (1n << onePosition)
+                    for (const onePosition of onePositions) {
+                        floatingOneMask ^= 1n << onePosition
                     }
                     let floatingZeroMask = 0n
-                    for (let zeroPosition of zeroPositions) {
-                        floatingZeroMask =
-                            floatingZeroMask ^ (1n << zeroPosition)
+                    for (const zeroPosition of zeroPositions) {
+                        floatingZeroMask ^= 1n << zeroPosition
                     }
 
                     const maskedAddress =
