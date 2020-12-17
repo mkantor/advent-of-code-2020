@@ -117,6 +117,7 @@ function* simulate<C extends Coordinates>(
     while (true) {
         const nextUniverse = universe.clone()
 
+        const inactiveNeighborsOfActiveCubes = new Universe<C>([])
         for (const activeCube of universe) {
             const [activeNeighbors, inactiveNeighbors] = partition(
                 neighbors(activeCube),
@@ -134,15 +135,20 @@ function* simulate<C extends Coordinates>(
                 }
             }
 
-            // If a cube is inactive but exactly 3 of its neighbors are active,
-            // the cube becomes active. Otherwise, the cube remains inactive.
-            for (const inactiveCube of inactiveNeighbors) {
-                const activeNeighbors = neighbors(inactiveCube).filter((cube) =>
-                    universe.has(cube),
-                )
-                if (activeNeighbors.length === 3) {
-                    nextUniverse.add(inactiveCube)
-                }
+            for (const inactiveNeighbor of inactiveNeighbors) {
+                inactiveNeighborsOfActiveCubes.add(inactiveNeighbor)
+            }
+        }
+
+        // If a cube is inactive but exactly 3 of its neighbors are active, the
+        // cube becomes active. Otherwise, the cube remains inactive.
+        for (const inactiveCube of inactiveNeighborsOfActiveCubes) {
+            const activeNeighborCount = neighbors(inactiveCube).reduce(
+                (count, cube) => (universe.has(cube) ? count + 1 : count),
+                0,
+            )
+            if (activeNeighborCount === 3) {
+                nextUniverse.add(inactiveCube)
             }
         }
 
