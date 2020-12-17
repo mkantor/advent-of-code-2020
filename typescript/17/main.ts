@@ -111,15 +111,6 @@ function neighbors<C extends Coordinates>(location: C): C[] {
     })
 }
 
-function areNeighbors<C extends Coordinates>(a: C, b: C): boolean {
-    return (
-        // They aren't neighbors if they are the same location.
-        !a.every((value, index) => value === b[index]) &&
-        // All dimensions must be at most 1 distance.
-        a.every((value, index) => Math.abs(value - b[index]) <= 1)
-    )
-}
-
 function* simulate<C extends Coordinates>(
     universe: Universe<C>,
 ): Generator<Universe<C>, undefined> {
