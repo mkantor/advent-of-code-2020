@@ -23,9 +23,8 @@ function getNthValueFromIterator<T>(
     n: number,
     iterator: Iterator<T, unknown>,
 ): T | undefined {
-    for (let turn = 0; turn < n; turn++) {
-        const next = iterator.next()
-        if (next.done) {
+    while (n-- > 0) {
+        if (iterator.next().done) {
             return undefined
         }
     }
