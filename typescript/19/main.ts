@@ -6,7 +6,7 @@ function createRegExp(inputRules: Rules): RegExp {
     // Reduce until rule 0 doesn't contain any references.
     while (/\d/g.test(rules[0])) {
         for (const index in rules) {
-            let reducedRule = rules[index].replace(/(\d+)/, (match) => {
+            const reducedRule = rules[index].replace(/(\d+)/, (match) => {
                 const replacement = rules[Number(match)]
                 if (replacement.length > 1) {
                     return `(?:${replacement})`
@@ -610,16 +610,15 @@ input.rules[8] = '42+'
 // Apparently it's possible to represent this kind of pattern directly in PCRE
 // and some other fancier non-regular regex languages, but I couldn't figure it
 // out in JavaScript regexes. So I cheated.
-input.rules[11] = '(?:42 31)'
 const maxMessageLength = input.messages.reduce(
     (maxLength, message) =>
         message.length > maxLength ? message.length : maxLength,
     0,
 )
+input.rules[11] = '(?:42 31)'
 for (let n = 2; n < maxMessageLength / 2; n++) {
     // Generate repeated patterns that can match up to the longest message.
-    input.rules[11] =
-        input.rules[11] + ' | (?:' + '42 '.repeat(n) + '31 '.repeat(n) + ')'
+    input.rules[11] += `|(?:${'42 '.repeat(n)}${'31 '.repeat(n)})`
 }
 
 const regExp2 = createRegExp(input.rules)

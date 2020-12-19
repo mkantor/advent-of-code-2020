@@ -1,6 +1,6 @@
 // This one was a hot mess. I was sleep deprived when I started, and had the
-// hilarious idea to "parse" expressions by munging them into JSON and using
-// JSON.parse. Things went downhill from there.
+// hilarious idea to parse expressions by munging them into JSON first. Things
+// went downhill from there.
 //
 // In retrospect it would have been better to abstract out the expression tree
 // into a saner data structure (not just a bunch of nested arrays). If I were
@@ -55,10 +55,7 @@ function evaluate(expression: Expression): number {
                     typeof token === 'string' &&
                     result.operator === undefined
                 ) {
-                    return {
-                        ...result,
-                        operator: token,
-                    }
+                    return { ...result, operator: token }
                 } else if (
                     typeof token === 'number' &&
                     result.operator !== undefined
