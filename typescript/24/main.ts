@@ -528,20 +528,15 @@ const input = [
 const center = { x: 0, y: 0, z: 0 }
 const locationsToFlip = input
     .map(parse)
-    .map((directions) =>
-        directions.reduce(
-            (location, direction) => step(location, direction),
-            center,
-        ),
-    )
+    .map((directions) => directions.reduce(step, center))
 
 const blackTiles: BlackTiles = new Set()
 for (const location of locationsToFlip) {
-    const key = stringifyCoordinate(location)
-    if (blackTiles.has(key)) {
-        blackTiles.delete(key)
+    const stringifiedLocation = stringifyCoordinate(location)
+    if (blackTiles.has(stringifiedLocation)) {
+        blackTiles.delete(stringifiedLocation)
     } else {
-        blackTiles.add(key)
+        blackTiles.add(stringifiedLocation)
     }
 }
 
