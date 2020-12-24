@@ -28,7 +28,7 @@ type Input = {
     nearbyTickets: Ticket[]
 }
 
-function tabluateArray<T>(length: number, fillWith: (index: number) => T): T[] {
+function tabulateArray<T>(length: number, fillWith: (index: number) => T): T[] {
     const array = new Array<T>(length)
     for (let index = 0; index < array.length; index++) {
         array[index] = fillWith(index)
@@ -115,11 +115,11 @@ function determineFieldOrder(
     rules: Rules,
 ): string[] {
     const fieldCount = Object.keys(rules).length
-    const valuesByFieldIndex = tabluateArray(fieldCount, (index) =>
+    const valuesByFieldIndex = tabulateArray(fieldCount, (index) =>
         presumablyValidTickets.map((row) => row[index]),
     )
 
-    let possibleFieldsAtIndexes = tabluateArray(
+    let possibleFieldsAtIndexes = tabulateArray(
         fieldCount,
         () => new Set<string>(),
     )
