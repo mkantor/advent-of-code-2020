@@ -244,7 +244,6 @@ function tileFits(
  * given set of tiles will either have zero or many valid arrangements (because
  * any valid complete image can be flipped/rotated and still be valid).
  */
-const allAttempts = new Map<string, AssembledTiles>()
 function buildSquareImage(
     remainingTiles: readonly Tile[],
     state?: {
@@ -287,22 +286,6 @@ function buildSquareImage(
                 }
             }
         }
-    }
-
-    const imageFingerprint = state.imageSoFar
-        .map((row) =>
-            row
-                .map(([tile, transformation]) => {
-                    return `[${tile.id},${transformation}]`
-                })
-                .join(''),
-        )
-        .join('')
-    if (imageFingerprint.length > 0) {
-        allAttempts.set(
-            imageFingerprint,
-            JSON.parse(JSON.stringify(state.imageSoFar)),
-        )
     }
 
     // If we made it here there is no possible arrangement of tiles that fit.
