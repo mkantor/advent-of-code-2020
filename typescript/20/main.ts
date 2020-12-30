@@ -6,14 +6,6 @@ type Tile = {
 type ImageDimensions = { width: number; height: number }
 type AssembledTiles = [Tile, Transformation][][]
 
-function tabulateArray<T>(length: number, fillWith: (index: number) => T): T[] {
-    const array = new Array<T>(length)
-    for (let index = 0; index < array.length; index++) {
-        array[index] = fillWith(index)
-    }
-    return array
-}
-
 function arraysAreIdentical<T>(
     array1: readonly T[],
     array2: readonly T[],
@@ -142,35 +134,6 @@ function withoutEdges<T>(grid: T[][]): T[][] {
     return grid.slice(1, -1).map((row) => row.slice(1, -1))
 }
 
-function nextEmptyTile(
-    partialImage: AssembledTiles,
-    finalImageSize: ImageDimensions,
-): undefined | { rowIndex: number; columnIndex: number } {
-    const nextTileLocation = { rowIndex: 0, columnIndex: 0 }
-    while (
-        nextTileLocation.columnIndex < finalImageSize.width &&
-        nextTileLocation.rowIndex < finalImageSize.height
-    ) {
-        const nextTile =
-            partialImage[nextTileLocation.rowIndex]?.[
-                nextTileLocation.columnIndex
-            ]
-        if (nextTile === undefined) {
-            return nextTileLocation
-        } else {
-            if (nextTileLocation.columnIndex + 1 >= finalImageSize.width) {
-                nextTileLocation.columnIndex = 0
-                nextTileLocation.rowIndex += 1
-            } else {
-                nextTileLocation.columnIndex += 1
-            }
-        }
-    }
-
-    // The image is already complete!
-    return undefined
-}
-
 /**
  * Determines if/how `nextTile` can be slotted into the next available space in
  * `imageSoFar` by applying any transformations to it.
@@ -186,24 +149,22 @@ function placeNextTile(
     finalImageSize: { height: number; width: number },
     nextTile: Tile,
 ): readonly AssembledTiles[] {
-    const nextTileLocation = nextEmptyTile(imageSoFar, finalImageSize)
-    if (nextTileLocation === undefined) {
-        // The image is already complete!
-        return [imageSoFar]
+    let nextTileRowIndex = 0
+    let nextTileColumnIndex = 0
+    if (imageSoFar.length > 0) {
+        nextTileRowIndex = imageSoFar.length - 1
+        nextTileColumnIndex = imageSoFar[nextTileRowIndex].length ?? 0 - 1
+        if (nextTileColumnIndex === finalImageSize.width) {
+            nextTileRowIndex++
+            nextTileColumnIndex = 0
+        }
     }
 
-    // I don't want to enable noUncheckedIndexedAccess for the whole project,
-    // but do want those semantics here.
-    type OptionalImageElement = [Tile, Transformation] | undefined
-    const left = imageSoFar[nextTileLocation.rowIndex]?.[
-        nextTileLocation.columnIndex - 1
-    ] as OptionalImageElement
+    const left = imageSoFar[nextTileRowIndex]?.[nextTileColumnIndex - 1]
     const leftEdge =
         left && getRightEdge(transformations[left[1]](left[0].pixels))
 
-    const above = imageSoFar[nextTileLocation.rowIndex - 1]?.[
-        nextTileLocation.columnIndex
-    ] as OptionalImageElement
+    const above = imageSoFar[nextTileRowIndex - 1]?.[nextTileColumnIndex]
     const topEdge =
         above && getBottomEdge(transformations[above[1]](above[0].pixels))
 
@@ -215,11 +176,10 @@ function placeNextTile(
     )
 
     return transformationsWhichMakeNextTileFit.map((transformationName) => {
-        // Copy things to avoid mutating imageSoFar.
-        const newRow = [...imageSoFar[nextTileLocation.rowIndex]]
-        newRow[nextTileLocation.columnIndex] = [nextTile, transformationName]
+        const newRow = [...(imageSoFar[nextTileRowIndex] ?? [])]
+        newRow[nextTileColumnIndex] = [nextTile, transformationName]
         const newImage = [...imageSoFar]
-        newImage[nextTileLocation.rowIndex] = newRow
+        newImage[nextTileRowIndex] = newRow
         return newImage
     })
 }
@@ -248,38 +208,34 @@ function buildSquareImage(
     remainingTiles: readonly Tile[],
     state?: {
         imageSoFar: AssembledTiles
-        finalImageSize: { height: number; width: number }
+        finalImageEdgeLength: number
     },
 ): AssembledTiles | undefined {
     if (state === undefined) {
-        const imageEdgeLength = Math.sqrt(remainingTiles.length)
-        state = {
-            finalImageSize: { height: imageEdgeLength, width: imageEdgeLength },
-            imageSoFar: tabulateArray(imageEdgeLength, () => []),
-        }
+        const finalImageEdgeLength = Math.sqrt(remainingTiles.length)
+        state = { finalImageEdgeLength, imageSoFar: [] }
     }
 
     for (let tileIndex = 0; tileIndex < remainingTiles.length; tileIndex++) {
         const nextTile = remainingTiles[tileIndex]
+        const nextRemainingTiles = [...remainingTiles]
+        nextRemainingTiles.splice(tileIndex, 1)
         const newImages = placeNextTile(
             state.imageSoFar,
-            state.finalImageSize,
+            {
+                height: state.finalImageEdgeLength,
+                width: state.finalImageEdgeLength,
+            },
             nextTile,
         )
         for (const newImage of newImages) {
-            if (
-                countElements(newImage) >=
-                state.finalImageSize.width * state.finalImageSize.height
-            ) {
+            if (countElements(newImage) === state.finalImageEdgeLength ** 2) {
                 return newImage
             } else {
-                const completeImage = buildSquareImage(
-                    remainingTiles.filter((tile) => tile.id !== nextTile.id),
-                    {
-                        finalImageSize: state.finalImageSize,
-                        imageSoFar: newImage,
-                    },
-                )
+                const completeImage = buildSquareImage(nextRemainingTiles, {
+                    finalImageEdgeLength: state.finalImageEdgeLength,
+                    imageSoFar: newImage,
+                })
                 if (completeImage !== undefined) {
                     // All done!
                     return completeImage
@@ -2073,7 +2029,7 @@ const corners = [
 
 console.log(
     'Product of corner IDs:',
-    corners.reduce((product, [tile, _b]) => tile.id * product, 1),
+    corners.reduce((product, [tile, _transformation]) => tile.id * product, 1),
 )
 
 const monsterIndexes = `
@@ -2094,12 +2050,17 @@ const countMonsters = (pixels: Pixel[][]) => {
 }
 
 const actualImage = createActualImage(image)
-const counts = transformationNames.map((transformationName) => {
-    return countMonsters(transformations[transformationName](actualImage))
-})
-const seaMonsterCount = counts.sort((a, b) => a - b)[counts.length - 1]
+const seaMonsterCount = transformationNames.reduce(
+    (maxCount, transformationName) => {
+        const count = countMonsters(
+            transformations[transformationName](actualImage),
+        )
+        return count > maxCount ? count : maxCount
+    },
+    0,
+)
 const waveCount = actualImage.reduce((count, row) => {
-    return count + row.filter((x) => x).length
+    return count + row.reduce((count, pixel) => count + (pixel ? 1 : 0), 0)
 }, 0)
 const seaMonsterSize = monsterIndexes.length
 
