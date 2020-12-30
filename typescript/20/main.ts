@@ -56,13 +56,21 @@ function countOccurrences<T>(
         [0, 0],
     )
     let occurrences = 0
-    for (let rowIndex = 0; rowIndex < grid.length; rowIndex++) {
-        const row = grid[rowIndex]
-        for (let columnIndex = 0; columnIndex < row.length; columnIndex++) {
-            const region = grid
-                .slice(rowIndex, rowIndex + regionHeight)
-                .map((row) => row.slice(columnIndex, columnIndex + regionWidth))
-            if (predicateHoldsForAllIndexes(region, indexes, predicate)) {
+    for (
+        let rowOffset = 0;
+        rowOffset < grid.length - regionHeight;
+        rowOffset++
+    ) {
+        for (
+            let columnOffset = 0;
+            columnOffset < grid[rowOffset].length - regionWidth;
+            columnOffset++
+        ) {
+            const offsetIndexes = indexes.map(
+                ([rowIndex, columnIndex]) =>
+                    [rowIndex + rowOffset, columnIndex + columnOffset] as const,
+            )
+            if (predicateHoldsForAllIndexes(grid, offsetIndexes, predicate)) {
                 occurrences++
             }
         }
@@ -206,15 +214,13 @@ function placeNextTile(
         },
     )
 
-    // TODO: Can probably avoid deep-cloning everything on every iteration.
-    // Maybe just clone the row that contains nextTileLocation?
     return transformationsWhichMakeNextTileFit.map((transformationName) => {
-        const newImage = JSON.parse(JSON.stringify(imageSoFar))
-        newImage[nextTileLocation.rowIndex][nextTileLocation.columnIndex] = [
-            nextTile,
-            transformationName,
-        ]
-        return newImage as AssembledTiles
+        // Copy things to avoid mutating imageSoFar.
+        const newRow = [...imageSoFar[nextTileLocation.rowIndex]]
+        newRow[nextTileLocation.columnIndex] = [nextTile, transformationName]
+        const newImage = [...imageSoFar]
+        newImage[nextTileLocation.rowIndex] = newRow
+        return newImage
     })
 }
 
