@@ -4,28 +4,14 @@
 // do not contain allergens (because not all allergens are flagged in each
 // ingredient list).
 //
-// Like, given the test input:
-//
-//     mxmxvkd kfcds sqjhc nhms (contains dairy, fish)
-//     trh fvjkl sbzzf mxmxvkd (contains dairy)
-//     sqjhc fvjkl (contains soy)
-//     sqjhc mxmxvkd sbzzf (contains fish)
-//
-// Supposedly sqjhc is definitely not an allergen. But if you take the rules at
-// face value this is a totally valid solution:
-//
-//     soy = fvjkl
-//     dairy = mxmxvkd
-//     fish = sqjhc <-- wtf?
-//
-// I had to search the web to find other explanations. Turns out you are
-// supposed to somehow make this not-even-hinted-at assumption:
+// I had to search the web to find explanations. Turns out you are supposed to
+// somehow make this assumption:
 //
 //     Every ingredient missing from a specific food can't contain any
 //     allergen listed on that food.
 //
-// I still have no idea how you're meant figure that out. I guess randomly
-// invent extra rules until the test input/output make sense? ¯\_(ツ)_/¯
+// I still have no idea how you're meant figure that out. I guess invent extra
+// rules until the test input/output make sense? ¯\_(ツ)_/¯
 
 type Ingredient = string
 type Allergen = string
